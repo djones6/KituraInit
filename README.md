@@ -31,17 +31,12 @@ To build and run the application:
 1. `.build/debug/KituraInit`
 
 #### Docker
-A description of the files related to Docker can be found in the [Docker files](#docker-files) setion. To build the two docker images, run the following commands from the root directory of the project:
+A description of the files related to Docker can be found in the [Docker files](#docker-files) section. To build the docker image, run the following command from the root directory of the project:
 * `docker build -t myapp-run .`
-* `docker build -t myapp-build -f Dockerfile-tools .`
-You may customize the names of these images by specifying a different value after the `-t` option.
-
-To compile the application using the tools docker image, run:
-* `docker run -v $PWD:/swift-project -w /swift-project myapp-build /swift-utils/tools-utils.sh build release`
+You may customize the name of the image by specifying a different value after the `-t` option.
 
 To run the application:
-* `docker run -it -p 8080:8080 -v $PWD:/swift-project -w /swift-project myapp-run sh -c .build-ubuntu/release/KituraInit`
-
+* `docker run -it -p 8080:8080 myapp-run`
 
 #### Kubernetes
 To deploy your application to your Kubernetes cluster, run `helm install --name myapp .` in the `/chart/KituraInit` directory. You need to make sure you change the `repository` variable in your `chart/KituraInit/values.yaml` file points to the docker image containing your runnable application.
@@ -89,15 +84,13 @@ These metrics can be viewed in an embedded dashboard on `/swiftmetrics-dash`. Th
 The application includes the following files for Docker support:
 * `.dockerignore`
 * `Dockerfile`
-* `Dockerfile-tools`
 
-The `.dockerignore` file contains the files/directories that should not be included in the built docker image. By default this file contains the `Dockerfile` and `Dockerfile-tools`. It can be modified as required.
+The `.dockerignore` file contains the files/directories that should not be included in the built docker image. By default this file contains the `Dockerfile`. It can be modified as required.
 
-The `Dockerfile` defines the specification of the default docker image for running the application. This image can be used to run the application.
+The `Dockerfile` contains two stages: a builder stage that compiles the application, and a final stage that builds the image for running the application.
 
-The `Dockerfile-tools` is a docker specification file similar to the `Dockerfile`, except it includes the tools required for compiling the application. This image can be used to compile the application.
+The first stage builds an image that extends the `swift` image, copies in the project directory, and executes the swift package manager to compile the application.  The second stage builds an image that extends the `swift:slim` image, and copies in the project directory, that now includes the executable binary.  The benefit of using multiple stages is that the final 'run' image is significantly smaller, as it contains only what is required to run the application.
 
-Details on how to build the docker images, compile and run the application within the docker image can be found in the [Run section](#run).
 #### IBM Cloud deployment
 Your application has a set of cloud deployment configuration files defined to support deploying your application to IBM Cloud:
 * `manifest.yml`
